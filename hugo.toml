@@ -72,4 +72,4 @@ style = "github-dark"
 [[menu.main]]
   name = "Study Log"
   weight = 3
-  url = "studyLogs/"
+  url = "studylogs/"

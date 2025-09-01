@@ -50,4 +50,3 @@ type: "studylogs"
 > What’s the difference between this and the console?
 
 - Well, the script panel allows you to store multiple lines of codes for your next session of use. Meanwhile the console is only for immediate usage, it does not store any codes under any circumstances.  
--TODO
