@@ -1,3 +1,75 @@
-baseURL = 'https://example.org/'
-languageCode = 'en-us'
-title = 'My New Hugo Site'
+baseurl = "https://cyberntium.github.io/"
+title = "cyberntium"
+theme = "hugo-coder"
+languagecode = "en"
+defaultcontentlanguage = "en"
+
+
+[pagination]
+pagerSize = 20
+
+[services]
+[services.disqus]
+shortname = "yourdiscussshortname"
+
+[markup.highlight]
+style = "github-dark"
+
+[params]
+  author = "Carl Ho"
+  info = "Information Engineering and Media Undergraduate"
+  description = "My Personal Website"
+  keywords = "blog,developer,personal"
+  avatarurl = "https://github.com/CyberNtium.png"
+  #gravatar = "john.doe@example.com"
+
+  faviconSVG = "/img/favicon.svg"
+  favicon_32 = "/img/favicon-32x32.png"
+  favicon_16 = "/img/favicon-16x16.png"
+
+  since = 2025
+
+  enableTwemoji = true
+
+  colorScheme = "auto"
+  hidecolorschemetoggle = false
+
+  # customCSS = ["css/custom.css"]
+  # customSCSS = ["scss/custom.scss"]
+  # customJS = ["js/custom.js"]
+
+[taxonomies]
+  category = "categories"
+  series = "series"
+  tag = "tags"
+  author = "authors"
+
+# Social links
+[[params.social]]
+  name = "Github"
+  icon = "fa-brands fa-github fa-2x"
+  weight = 1
+  url = "https://github.com/CyberNtium/"
+[[params.social]]
+  name = "LinkedIn"
+  icon = "fa-brands fa-linkedin fa-2x"
+  weight = 2
+  url = "https://www.linkedin.com/in/carl-ho-037898266/"
+
+# Menu links
+[[menu.main]]
+  name = "Blog"
+  weight = 1
+  url  = "post/"
+[[menu.main]]
+  name = "About"
+  weight = 2
+  url = "about/"
+[[menu.main]]
+  name = "Projects"
+  weight = 3
+  url = "projects/"
+[[menu.main]]
+  name = "Study Log"
+  weight = 3
+  url = "studyLogs/"
