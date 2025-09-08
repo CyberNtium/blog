@@ -73,3 +73,7 @@ style = "github-dark"
   name = "Study Log"
   weight = 3
   url = "studylogs/"
+[[menu.main]]
+  name = "Music"
+  weight = 4
+  url = "music/"
