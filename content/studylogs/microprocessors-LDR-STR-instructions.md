@@ -38,8 +38,11 @@ type: "studylogs"
 - `LDR r2, [r1]`
 - Load r2 with contents of memory location pointed to by contents of r1
 
-### Pre-Indexed Instructions
 
+### Little Endian & Big Endian TODO
+
+
+### Pre-Indexed Instructions
 - Pre-indexed addressing basically adds an additional offset to the base address before executing LDR/STR
 
 - `LDR r0, [r1, #8]`  
@@ -70,6 +73,10 @@ type: "studylogs"
 - - `0x4000` + `0x80` = `0x4080`
 - - Load whatever is in the address `0x4080` into `r9`
 
+- - Another simple way to look at this is:
+- - [r1, r8, LSL #2]
+- - final address will be `[r1] + [r4]*2^2`
+
 ### Pre-Index with Write-Back `!`
 #### Example
 
@@ -88,4 +95,6 @@ type: "studylogs"
 - Difference with Write-back:
 - `LDR r2, [r1, #1]!`
 - Increment to base address by offset first then load into r1
+
+
 
