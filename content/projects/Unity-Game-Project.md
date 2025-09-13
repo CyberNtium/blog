@@ -64,3 +64,86 @@ Let’s breakdown the RHS:
 Finally, we put the **_Move()_** function inside **_Update()_**, and our player _GameObject_ can now move when we press our inputs!
 
 {{< figure src="https://i.imgur.com/W2Qntx2.gif" alt="moving" class="center">}}
+
+
+## 2. Jumping
+
+### 2.1 Basic Jump() Concept
+
+To make our codes easy to understand, it’s important to keep track of what state the player is at. If we initialise a new state every time a function is called, it is not a very efficient code.  
+Therefore, let’s make a new script called `PlayerStateList` to keep track of what state the player is at according to user inputs:
+
+```C#
+public class PlayerStateList : MonoBehaviour 
+{
+    public bool jumping = False; //Don't forget this is in the PlayerStateList script
+}
+```
+Let jumping to be false by default since the player should not be jumping at the start of the game for no reason. Then, we need to reference this to the player controller file in the Start function:
+
+```C#
+void Start ()
+{
+    pState = GetComponent<PlayerStateList>();
+    rb = GetComponent<Rigidbody2D>(); // From Move()
+}
+```
+
+`pState` stands for player state, this line looks for the component PlayerStateList which is the script we made just now. Now go back to Unity and drag the PlayerStateList script onto the Player gameObject.  
+
+Let's talk about the actual jump function now:  
+
+```C#
+if (Input.GetButtonUp("Jump") && rb.linearVelocity.y > 0)
+{
+    rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
+    pState.jumping = false;
+}
+```
+This is the first part of `Jump()`:  
+- `Input.GetButtonUp(“Jump”)` basically means the moment immediately after you pressed and RELEASE the “Jump” button (in this case is Spacebar)
+- `rb.linearVelocity.y` checks if the rigidbody of Player is still moving upwards
+- `rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0)` 
+- This creates a new Vector2 with:
+- - `rb.linearVelocity.x`, this is your current horizontal movement, meaning you keep all your momentum in the X-axis, that’s why you can jump left and right.
+Set your Y component to zero. This means that you kill upwards velocity
+- - This ultimately means that you stop going higher the moment you release the “Jump” button.
+- Finally, we set `pState.jumping = false` because we have in fact stopped jumping after releasing the “Jump” button  
+
+And that’s basically how the main `Jump()` would work in an ideal scenario. 
+
+### 2.2 Grounded()
+```C#
+public bool Grounded()
+{
+    if (Physics2D.Raycast(groundCheckPoint.position, Vector2.down, groundCheckY, whatIsGround)
+        || Physics2D.Raycast(groundCheckPoint.position + new Vector3(groundCheckX, 0, 0), Vector2.down, groundCheckY, whatIsGround)
+        || Physics2D.Raycast(groundCheckPoint.position + new Vector3(-groundCheckX, 0, 0), Vector2.down, groundCheckY, whatIsGround))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+```
+
+We declare a public method called `Grounded()` that returns a boolean value, true or false.  
+
+Then, let’s explain what is `Physics2D.Raycast`:
+
+The general formula or format for this function is as follows:
+
+**_Physics2D.Raycast(origin, direction, distance, layerMask)_**  
+
+Physics2D.Raycast function shoots an invisible ray according to your configuration and reports if the ray hits something in game. You can imagine it as a sensor in the form of a layer pointer.
+- origin = a vector2 that specifies the starting point of your Raycast
+- direction = a vector 2 that defines the angle/path of your Raycast. Is it up or down or 45 degrees up and so on
+- distance = this is a float that we can customise for the maximum length of the Raycast which it can travel before cutting off
+- layerMask = this is an integer that filters which gameObject the Raycast can see. If you look at top right when you have a gameObject selected you can see:
+
+- {{< figure src="https://i.imgur.com/wxyICVd.png" alt="layerMask" class="center" >}}
+
+-
+

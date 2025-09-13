@@ -1,5 +1,5 @@
 ---
-title: "BC2016 Session 2: Analytics Introduction"
+title: "BC2406 Session 2: Analytics Introduction"
 date: 2025-08-31
 type: "studylogs"
 ---

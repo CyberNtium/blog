@@ -1,5 +1,5 @@
 ---
-title: "BC2016 Session 1: Course Overview"
+title: "BC2406 Session 1: Course Overview"
 date: 2025-08-30
 type: "studylogs"
 ---

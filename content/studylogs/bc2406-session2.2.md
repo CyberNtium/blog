@@ -1,5 +1,5 @@
 ---
-title: "BC2016 Session 2.2: Introduction to R Programming Basics"
+title: "BC2406 Session 2.2: Introduction to R Programming Basics"
 date: 2025-09-01
 type: "studylogs"
 ---

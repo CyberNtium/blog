@@ -1,5 +1,5 @@
 ---
-title: "BC2016 Session 2.1: Fundamental Concepts"
+title: "BC2406 Session 2.1: Fundamental Concepts"
 date: 2025-09-01
 type: "studylogs"
 ---
