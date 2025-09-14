@@ -53,7 +53,7 @@ In this case, we are moving the immediate value of 10 (1010B or 0xA) into r6. An
 ### Scenario 2: `MOV r6, #0x8C`  
 For this case, 0x8C is 140 in decimal, which is lesser than the max which is (2^8)-1 = 255.  
 
-### Scenario 3: `MOV r6, #0xA400`
+### Scenario 3: `#0xA400`
 For this case, 0xA400 is 41984, which is, uh, bigger than 255. So, error occurs. What should we do here?  
 
 ### Solution for Scenario 3:  `MOV r6, #0xA4, 24`
@@ -68,7 +68,7 @@ To get a clearer picture, we have to look from the binary angle:
 00000000 00000000 10100100 00000000 // now it becomes 0xA400, which is what we want to send originally
 ```
 
-### Scenario 4: Move #4096 to r6
+### Scenario 4: `#4096`
 
 4096 --> 0x1000  --> 00000000 00000000 00010000 00000000B
 
@@ -82,7 +82,55 @@ To get a clearer picture, we have to look from the binary angle:
 00000000 00000000 00010000 00000000 // now it becomes 0x1000, which is what we want to send originally
 ```
 
+### Scenario 5: `#0x7D8`
 
-### What if numbers are still too large?
+0x7D8 --> 011111011000 B --> 00000000 00000000 00000111 11011000 B
 
-`LDR rd, =const`
+### Solution for Scenario 5: `MOV r6, #0xFB`
+```text
+00000000 00000000 00000000 11111011 // 0x7D8 in binary form
+
+                    // rotate to right by 29 bits, or to the left by 3 bits (adds up to 32 bits)
+                      <--------
+00000000 00000000 00000111 11011000 // now it becomes 0x7D8, which is what we want to send originally
+```
+But is this allow?   
+_**NO**_  
+{{< notice warning >}}
+Remember that any 8-bits can only be shifted by an **EVEN** number of bit positions
+{{< /notice >}}  
+
+Since the only way to become 0x7DB is to shift an odd number of bit positions, this operation is impossible to perform for the `MOV` function.  
+
+Instead, we can use: 
+```ASM
+LDR r2, =0x7D8
+```
+**remember that there's no hashtag behind the 0x7D8!*
+
+### Scenario 6: `#0x17400`
+
+0x17400 --> 00010111010000000000 B --> 00000000 00000001 01110100 00000000 B
+
+### Solution for Scenario 6: `MOV r6, #0x5D`
+```text
+00000000 00000000 00000000 01011101 // 0x5D in binary form
+
+                    // rotate to right by 22 bits, or to the left by 10 bits (adds up to 32 bits)
+                      <--------
+00000000 00000001 01110100 00000000 // now it becomes 0x17400, which is what we want to send originally
+```
+
+### Scenario 7: `#0x1980`
+
+0x1980 --> 0001100110000000 B --> 00000000 00000000 00011001 10000000 B
+
+### Solution for Scenario 7: `MOV r6, #0x66`
+```text
+00000000 00000000 00000000 01100110 B// 0x66 in binary form
+
+                    // rotate to right by 26 bits, or to the left by 6 bits (adds up to 32 bits)
+                      <--------
+00000000 00000000 00011001 10000000 // now it becomes 0x1980, which is what we want to send originally
+```
+

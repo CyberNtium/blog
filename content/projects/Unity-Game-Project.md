@@ -145,5 +145,7 @@ Physics2D.Raycast function shoots an invisible ray according to your configurati
 
 - {{< figure src="https://i.imgur.com/wxyICVd.png" alt="layerMask" class="center" >}}
 
--
+- Layer = Ground, which we have set it to be since it’s the floor  
+
+
 
