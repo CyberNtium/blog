@@ -1,6 +1,6 @@
 ---
 date: '2025-09-09T14:44:35+08:00'
-title: 'Microprocessors MOV Function'
+title: 'Microprocessors Constant and Literals'
 type: "studylogs"
 ---
 {{< notice note >}}
@@ -53,10 +53,10 @@ In this case, we are moving the immediate value of 10 (1010B or 0xA) into r6. An
 ### Scenario 2: `MOV r6, #0x8C`  
 For this case, 0x8C is 140 in decimal, which is lesser than the max which is (2^8)-1 = 255.  
 
-### Scenario 3: `#0xA400`
+### TUT5 Q2a: `#0xA400`
 For this case, 0xA400 is 41984, which is, uh, bigger than 255. So, error occurs. What should we do here?  
 
-### Solution for Scenario 3:  `MOV r6, #0xA4, 24`
+### Solution for TUT5 Q2a:  `MOV r6, #0xA4, 24`
 
 Let's translate this line: First off we rotate A4 by 24 bits to the right, then we put it into r6.  
 To get a clearer picture, we have to look from the binary angle:  
@@ -68,7 +68,7 @@ To get a clearer picture, we have to look from the binary angle:
 00000000 00000000 10100100 00000000 // now it becomes 0xA400, which is what we want to send originally
 ```
 
-### Scenario 4: `#4096`
+### Scenario 3: `#4096`
 
 4096 --> 0x1000  --> 00000000 00000000 00010000 00000000B
 
@@ -82,11 +82,11 @@ To get a clearer picture, we have to look from the binary angle:
 00000000 00000000 00010000 00000000 // now it becomes 0x1000, which is what we want to send originally
 ```
 
-### Scenario 5: `#0x7D8`
+### TUT5 Q2b: `#0x7D8`
 
 0x7D8 --> 011111011000 B --> 00000000 00000000 00000111 11011000 B
 
-### Solution for Scenario 5: `MOV r6, #0xFB`
+### TUT5 Q2b: `MOV r6, #0xFB`
 ```text
 00000000 00000000 00000000 11111011 // 0x7D8 in binary form
 
@@ -108,11 +108,11 @@ LDR r2, =0x7D8
 ```
 **remember that there's no hashtag behind the 0x7D8!*
 
-### Scenario 6: `#0x17400`
+### TUT5 Q2c: `#0x17400`
 
 0x17400 --> 00010111010000000000 B --> 00000000 00000001 01110100 00000000 B
 
-### Solution for Scenario 6: `MOV r6, #0x5D`
+### Solution for TUT5 Q2c: `MOV r6, #0x5D`
 ```text
 00000000 00000000 00000000 01011101 // 0x5D in binary form
 
@@ -121,11 +121,11 @@ LDR r2, =0x7D8
 00000000 00000001 01110100 00000000 // now it becomes 0x17400, which is what we want to send originally
 ```
 
-### Scenario 7: `#0x1980`
+### TUT5 Q2d: `#0x1980`
 
 0x1980 --> 0001100110000000 B --> 00000000 00000000 00011001 10000000 B
 
-### Solution for Scenario 7: `MOV r6, #0x66`
+### Solution for TUT5 Q2d: `MOV r6, #0x66`
 ```text
 00000000 00000000 00000000 01100110 B// 0x66 in binary form
 
@@ -133,4 +133,51 @@ LDR r2, =0x7D8
                       <--------
 00000000 00000000 00011001 10000000 // now it becomes 0x1980, which is what we want to send originally
 ```
+---
+
+# MVN (Move Negative)
+`MVN` is essentially the same as MOV except it moves the *one's complement* of the value into a given register:
+
+- `MVN r0, #0`
+0 = 0x00000000
+r0 will have the opposite = 0xFFFFFFFF
+
+- `MVN r0, #0xFF, 8`
+
+Remember *rotation* from MOV  
+`0xFF` = `00000000 00000000 00000000 FFFFFFFF B`  
+*rotation to right by 8 bits or left by 24 bits  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; => `FFFFFFFF 00000000 00000000 00000000 B`  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =   `0xFF000000`  
+But its `MVN`, so take the opposite:  
+`r0`  =  `0x00FFFFFF`
+
+## TUT5 Q1c - `MVN r7, #2 `
+- We move the immediate value 2 into register 7 but take the one's implement value
+- 2 -> `0x00000002` -> `00000000 00000000 00000000 00000010 B`
+- r7 -> `0xFFFFFFFD` -> `11111111 11111111 11111111 11111101 B`
+
+## TUT5 Q1d - `MVN r7, #0x8C, 4`
+- `0x8C`  -> `0x0000008C` -> `00000000 00000000 00000000 10001100 B`
+- `r7` -> `0xFFFFFF73`  -> `11111111 11111111 11111111 01110011 B`
+- rotate -> `0x3FFFFFF7`-> `00111111 11111111 11111111 11110111 B`
+
+---
+
+# Pseudo LDR
+- `LDR <Rd>, <numeric constant>`
+- We encounter this before when the immediate constant is too big
+- Using `LDR` we can load all possible 32-bit constant
+
+## Examples
+- `LDR r0, =42`
+- - Translate to `MOV r0, #42`
+
+- `LDR r0, =0xFFFFFFFF`
+- - Translate to `MVN r0, #0`
+
+- `LDR r1, =0x55555555`
+- - This number is not representable by either `MOV` or `MVN`
+- - The immediate constant will be store in the *literal pool* in the memory
+- - Final translation => `LDR r1, [PC, #N]` where N is the offset to the literal pool
 
