@@ -359,6 +359,21 @@ loop2   ...
 ```
 
 
+# Other Interesting Loop Codes
 
+## Factorial
+```ASM
+        AREA FactLoop, CODE, READONLY
+        ENTRY
+
+        MOV     r0, #10         ; set your factorial target
+        MOV     r1, r0          ; store r0 in a temporary register
+loop
+        SUBS    r0, r0, #1
+        MULNE   r0, r1, r0      ; multiply if r0 =/= 0
+        BNE     loop            ; branch back to loop if r0 =/= 0
+
+Done    B       Done
+```
 
 
