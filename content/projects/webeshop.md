@@ -32,7 +32,7 @@ Regardless, as we can see, all your server related java class codes should live 
 
 #### 2.1.1: Libraries
 First of all, we need to import some Java libraries, namely these ones:
-```text
+```Java
 import java.io.*;
 import java.sql.*;
 import jakarta.servlet.*;
@@ -53,7 +53,7 @@ Finally, `jakarta.servlet.annotation.*` is required for a line above our public 
 #### 2.1.2: The Servlet Class
 
 #### Defining Our Class and Annotation
-```text
+```Java
 @WebServlet("/driporder")
 public class OrderServlet extends HttpServlet {
     ...
@@ -73,7 +73,7 @@ And finally, we can go into the first public class and see what's inside:
 spoilers more class lmao 😞  
 
 #### doGet Request and Response
-```text
+```Java
 @Override
 public void doGet(HttpServletRequest request, HttpServletResponse response)
         thorws ServletException, IOException {
@@ -106,3 +106,183 @@ Finally the `thorws ServletException, IOException` error detection. I will be ve
 
 
 #### Configuring Responses
+```Java
+response.setContentType("text/html");
+PrintWriter out = response.getWriter();
+```
+
+`response` here as mentioned before, is the `HttpServletResponse` object, which represents the message we want to sent to the user. When we say `.setContentType()`, we are essentially setting a header for the body of the data that we want to sent. You can kind of think of it as a type of metadata that lists down the specification of the data that you want to send. For example, when you send a parcel to someone, you need to have the recipient's address, your address, stamp or whatever on the parcel. Those stuff is this header.  
+And, in our case, our "data address" aka header is set to be a HTML document. Without this label, the browser will just pass through the raw HTML codes with all its syntaxes.  
+`PrintWriter out = response.getWriter()` here is the content inside the parcel. We first declare a PrintWriter object called "out" and assign it to `response.getWriter()` which means getting a PrintWriter object from `response`.  
+For the rest of the code, if we do `out.println("...")`, we are basically writing a line of text (in HTML) into this stream, and the browser will receive it and renders into the final web page.
+
+#### 2.1.3: Connecting to MySQL Database
+```Java
+try (
+    Connection conn = DriverManager.getConnection (
+        "jdbc:mysql://localhost:xxxx/BagusDrip?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC",
+        "admin69", "new_password69420");
+    Statement stmt = conn.createStatement();
+)
+```
+We first declare a Connection object call conn and initialise it as `DriverManager.getConnection(jdbc stuff)`. This is so that every time we do `conn.whatever` we are performing something that is directly related to the mySQL database, retrieving products information for example. Now, for the long line inside its bracket, it's essentially the JDBC URL which provides all the information you need to connect to the database. Note that we are using a very terrible way to connect to the database for simplicity sake, please do not do this in a professional setting, unless you want to get punched by your manager.  
+
+`Statement stmt = conn.createStatement()` Once we establish the connection with the database, this line will create a Statement object which is used to excecute static SQL statements, which we will touch on later.  
+
+
+#### 2.1.4: Getting User Inputs
+```Java
+String custName = request.getParameter("cust_name");
+String custEmail = request.getParameter("cust_email");
+String custPhone = request.getParameter("cust_phone");
+
+String[] productIds = request.getParameterValues("id[]");
+String[] models = request.getParameterValues("model[]");
+String[] prices = request.getParameterValues("price[]");
+String[] categories = request.getParameterValues("category[]");
+String[] quantities = request.getParameterValues("quantity[]");
+```
+`request.getParameter()` is for retrieving a single piece of information, returning the user's input as a single `String`. In this case, we want to get the user's name, email and phone.  
+`request.getParameterValues()` is basically the same thing but for multiple values that share the same name. That's why this method returns an array of `String`s, which we can loop through each one individually.
+
+
+#### 2.1.5: Checking for Empty Cart
+```Java
+if (productIds == null || productIds.length == 0) {
+    out.println("<h3>No items in the cart. Please go back and add products.</h3>");
+    out.println("<p><a href='cart.html'>Back to Cart</a></p>");
+    return;
+}
+```
+
+So, after getting the inputs from user, we first check if the cart is empty. The if statement checks for two things:  
+- `productIds == null`: This checks whether the `productIds` array that we initialised earlier even exist at all
+- OR
+- `productIds.length == 0`: This checks whether the array exists but contains zero items.
+If either of these conditions is true, there are no products to order, so we will run the code body of the if statement:
+- `out.println("<h3>No items in the cart. Please go back and add products.</h3>")`
+Remember earlier when we talked about HTML stuff, this is exactly what I am refering to. `out.println()` prints out the HTML code inside to be render for the webpage format.  
+`<h3>` means heading 3, but basically a heading.  
+`<p>` means paragraph. The browser will automatically add a space before and after the text to separate it from other stuff.  
+`<a>` means anchor, which is used for hyperlink. Thus, you see we put the `cart.html` there to direct the user to their cart page.  
+
+
+#### 2.1.6: Update the Database
+
+#### Insert Statement
+```Java
+String insertSql = "INSERT INTO order_records (product_id, cust_name, cust_email, cust_phone, model, category, price, quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+PreparedStatement pstmt = conn.prepareStatement(insertSql);
+```
+
+`String insertSql` is a SQL query. You probably notice the weird ? symbols at the end of the line, they are actually used as placeholders for the values that will be inserted.  
+You probably also noticed why did we declare a Statement which is vaguely similar to `stmt`, which is `PreparedStatement pstmt`.
+
+> What is the difference between PreparedStatement and normal Statement?
+
+Both `PreparedStatement` and `Statement` run SQL queries. However, `Statement` is only best for simple queries that do not deal with user inputs as it executes a query by concatenating strings together. If a user enters any malicious code, that code can be executed by the sql database. This is the infamous, **SQL Injection**.  
+`PreparedStatement` on the other hand, use the ? symbol as a placeholder, where they are *literal value* to be inserted into the SQL databases. So, for example, if I want to destroy your database, I type in `'); DROP TABLE products;--`, `PreparedStatement` will not see this as a code, but just some string, aka literal values. 
+
+#### Processing Products
+```Java
+for (int i = 0; i < productIds.length; i++) {
+    int productId = Integer.parseInt(productIds[i]);
+    String model = models[i];
+    float price = Float.parseFloat(prices[i]);
+    String category = categories[i];
+    int quantity = Integer.parseInt(quantities[i]);
+    ...
+```
+Time for the leetcode practice to shine lol (I regret not doing more leetcode...)
+
+The `for` loop starts with i = 0 and iterating through the `productIds` array and goes up to the total number of items in the cart which is `productIds.length - 1`.  We do not include the minus 1 because "<" symbol is not inclusive of the max value, which means the same thing as minus 1.
+
+Since `request.getParameterValues()` from before only returns value in `String`s, we need to convert them into `int` or `float` to perform mathematical operation on them:
+- `int productId = Integer.parseInt(productIds[i])`: `Integer.parseInt` essentially converts a string into an int
+- `float price = Float.parseFloat(prices[i])`: Same thing but for float
+
+
+#### Updating Product Inventory
+{{< notice note >}}
+_Note that there's some SQL table and database names that are not mentioned beforehand, just stick with it for now, I will make a separate blog dedicated to the SQL and JDBC server configuration_
+{{< /notice >}}  
+
+
+```Java
+String updateSql = "UPDATE products SET qty = qty - " + quantity + " WHERE id = " + productId + " AND qty >= " + quantity;
+int updateCount = stmt.executeUpdate(updateSql);
+if (updateCount == 0) {
+    out.println("<p>Error: Not enough stock for product ID: " + productId + " (Requested: " + quantity + ")</p>");
+    continue;
+}
+out.println("<p>" + updateCount + " record updated for product ID: " + productId + "</p>");
+```
+
+Let's slow down for the first SQL line, which is an UPDATE statement to modify any existing record:
+- `UPDATE products` - Specify which table we are modifying, in this case is the `products` table
+- `SET qty = qty - quantity`- Decrease the `qty` column by the amount ordered
+- `WHERE id = productId AND qty >= quantity` - Most important part. Only if the database qty has enough products, it will decrease by subtracting the requested quantity. Basically saying, if there is stock, let the customer add to their cart, if not, don't.
+
+`stmt.executeUpdate(updateSql)` - This essentially executes the SQL line above. Since it returns an int, the number of rows that is modified, we store it as a int called updateCount.  
+
+- `if (updateCount == 0)` basically means if there is no stock since no rows are modified.
+- We go into the if statement, and print out the no stock message. Recall that we will return in HTML format, so remember your `<p>` encapsulating your print statement in the middle.
+- `continue` allows the for loop to stop the current iteration and go to the next item (productId)
+
+
+{{< notice warning >}}
+_Note that as I mentioned few sections ago, it is really not safe to use the normal `Statement` because it allows SQL injections. Instead, we should use `PreparedStatement` like what we did for the  `insertsql` String. I just did it this way because I forgor and only noticed it 2 month after I made the code. The more safe code will be below:_
+```Java
+String updateSql = "UPDATE products SET qty = qty - ? WHERE id = ? AND qty >= ?";
+PreparedStatement updateStmt = conn.prepareStatement(updateSql);
+updateStmt.setInt(1, quantity);
+updateStmt.setInt(2, productId);
+updateStmt.setInt(3, quantity);
+int updateCount = updateStmt.executeUpdate();
+```
+...and rests are the same.
+Could I have deleted the one above? Probably. But it's better to reflect on my mistakes :3
+{{< /notice >}}  
+
+
+#### Insert Order Records
+```Java
+pstmt.setInt(1, productId);
+pstmt.setString(2, custName);
+pstmt.setString(3, custEmail);
+pstmt.setString(4, custPhone);
+pstmt.setString(5, model);
+pstmt.setString(6, category);
+pstmt.setFloat(7, price);
+pstmt.setInt(8, quantity);
+int insertCount = pstmt.executeUpdate();
+out.println("<p>" + insertCount + " record inserted into order_records for product ID: " + productId + "</p>");
+```
+
+The final part of the insufferably long `for` loop statement.  
+- The `pstmt` from 1 to 8 is where we fill in the placeholders "?" for the `insertSql` query 3 sections ago. Essentially, 1 is pointing to the first "?", and 2 points to the second "?" and so on. Make sure to use the correct data type, int or string or whatever
+-  Final step is `int insertCount = pstmt.executeUpdate()`:
+- - `pstmt.executeUpdate()` sends the complete INSERT query to the database to do its thing
+- - Since the method returns the numbers of rows, we store it as an int. Since we are incerting a single record for each products, this value would be "1" if the insertion did go through.
+- Finally, we print an HTML mesage to the user telling them that they have succefully added some product id into their cart
+
+
+#### Confirmation
+```Java
+response.sendRedirect("orderconfirm.html");
+```
+This line redirects the user to a confirmation page named "orderconfirm.html" that probably just prints out something like "Thank you for purchasing" or whatever.
+
+
+#### 2.1.7: Error Handling
+```Java
+catch (SQLException ex) {
+            out.println("<p>Error: " + ex.getMessage() + "</p>");
+            out.println("<p>Check Tomcat console for details.</p>");
+            ex.printStackTrace();
+...
+```
+`SQLException` is a type of exception thrown by Java when the database operation goes to shit. We reference it to a variable call ex in this case:
+- For the user, we print out whatever is from the ex using `ex.getMessage()` and tell the user something's gone awry with SQL
+- For us, we do `ex.printStackTrace()` as this prints a detailed trace of the error in the Tomcat console so we can go and find whatever error it is.
+
