@@ -1,9 +1,10 @@
 ---
-title: "Web E-shop Project - BagusDrip"
+title: "Web E-shop Project - BagusDrip - Part 1"
 date: 2025-08-31
 tags: ["IM2073", "Web Dev", "Java", "MySQL"]
 type: "projects"
 ---
+# OrderServlet.java
 {{< figure src="/images/bagusdrip-logo.png" alt="alt text" width="200px" >}}
 
 _This was a academic project on developing a full-stack web-app using Java Servlets on Tomcat and MySQL as backend. The course code is IM2073._  
