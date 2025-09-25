@@ -285,5 +285,90 @@ catch (SQLException ex) {
 ```
 `SQLException` is a type of exception thrown by Java when the database operation goes to shit. We reference it to a variable call ex in this case:
 - For the user, we print out whatever is from the ex using `ex.getMessage()` and tell the user something's gone awry with SQL
-- For us, we do `ex.printStackTrace()` as this prints a detailed trace of the error in the Tomcat console so we can go and find whatever error it is.
+- For us, we do `ex.printStackTrace()` as this prints a detailed trace of the error in the Tomcat console so we can go and find whatever error it is.  
 
+## Finalised Code
+```Java
+// To save as "BagusDrip\WEB-INF\classes\OrderServlet.java"
+import java.io.*;
+import java.sql.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import jakarta.servlet.annotation.*;
+
+@WebServlet("/driporder")
+public class OrderServlet extends HttpServlet {
+    @Override
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        try (
+            Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:xxxx/BagusDrip?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC",
+                "username", "password12334");
+            Statement stmt = conn.createStatement();
+        ) {
+            String custName = request.getParameter("cust_name");
+            String custEmail = request.getParameter("cust_email");
+            String custPhone = request.getParameter("cust_phone");
+
+            String[] productIds = request.getParameterValues("id[]");
+            String[] models = request.getParameterValues("model[]");
+            String[] prices = request.getParameterValues("price[]");
+            String[] categories = request.getParameterValues("category[]");
+            String[] quantities = request.getParameterValues("quantity[]");
+
+            if (productIds == null || productIds.length == 0) {
+                out.println("<h3>No items in the cart. Please go back and add products.</h3>");
+                out.println("<p><a href='cart.html'>Back to Cart</a></p>");
+                return;
+            }
+
+            // Update order_records to include quantity
+            String insertSql = "INSERT INTO order_records (product_id, cust_name, cust_email, cust_phone, model, category, price, quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement pstmt = conn.prepareStatement(insertSql);
+
+            for (int i = 0; i < productIds.length; i++) {
+                int productId = Integer.parseInt(productIds[i]);
+                String model = models[i];
+                float price = Float.parseFloat(prices[i]);
+                String category = categories[i];
+                int quantity = Integer.parseInt(quantities[i]);
+
+                // Update the quantity in the products table
+                String updateSql = "UPDATE products SET qty = qty - " + quantity + " WHERE id = " + productId + " AND qty >= " + quantity;
+                int updateCount = stmt.executeUpdate(updateSql);
+                if (updateCount == 0) {
+                    out.println("<p>Error: Not enough stock for product ID: " + productId + " (Requested: " + quantity + ")</p>");
+                    continue;
+                }
+                out.println("<p>" + updateCount + " record updated for product ID: " + productId + "</p>");
+
+                // Insert into order_records
+                pstmt.setInt(1, productId);
+                pstmt.setString(2, custName);
+                pstmt.setString(3, custEmail);
+                pstmt.setString(4, custPhone);
+                pstmt.setString(5, model);
+                pstmt.setString(6, category);
+                pstmt.setFloat(7, price);
+                pstmt.setInt(8, quantity);
+                int insertCount = pstmt.executeUpdate();
+                out.println("<p>" + insertCount + " record inserted into order_records for product ID: " + productId + "</p>");
+            }
+
+            response.sendRedirect("orderconfirm.html");
+
+        } catch (SQLException ex) {
+            out.println("<p>Error: " + ex.getMessage() + "</p>");
+            out.println("<p>Check Tomcat console for details.</p>");
+            ex.printStackTrace();
+        }
+        out.close();
+    }
+}
+```
+
+To be continued in Part 3...

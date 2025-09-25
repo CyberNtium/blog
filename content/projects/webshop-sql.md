@@ -1,6 +1,6 @@
 +++
 date = '2025-09-02'
-title = 'Web E-shop Project - BagusDrip - Part 3'
+title = 'Web E-shop Project - BagusDrip - Part 2'
 +++
 
 # MySQL (the bane of my existence)
