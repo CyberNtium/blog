@@ -173,3 +173,129 @@ shiftfunc
 
                 END
 ```
+- So what's the difference here between passing by stack versus passing by register?
+
+### The ARM APCS (AAPCS) - Application Procedure Call Standard
+Don't be afraid of the long ass name, it is just a standard, like any rules and regulation.  
+Imagine a Standard Operating Procedure (SOP) during the the Covid-19 era, where only half the class is allowed to come to school while the other half stays online.  
+AAPCS is essentially similar.
+
+- AAPCS defines how subroutines should be written 
+- Most importantly, which registers are parameters and which registers should be preserved
+| Registers  |  Implications |
+|------------| ------------- |
+|   r0 - r3  | Parameters into and results from subroutines    | 
+|   r4 - r11 |  Perserved    | 
+|     r12    | Scratch Register   | 
+|     r13    | stack pointer (sp) | 
+|     r14    | link register (lr)    | 
+|     r15    | Program counter (pc)    | 
+- - Basically:
+- - `r0 - r3` is used as parameters to send into subroutines. If we only were to use 4 registers max, then it's okay just use passing by register method. 
+- - However, when programs get complicated, we tend to use more than 4 registers, thus why we will be using passing by stack, which is when we need to use `r4 - r11`
+- - But at the end, it still depends on the question, if they ask for stack then do stack and vice versa
+
+Anyway, that was kinda boring, let's get back to passing by stack:
+
+```ASM
+                LDR     sp, =ramBase + 0x100
+                MOV     r0, #0     
+                LDr     r1, =0x00001234
+                MOV     r2, #4
+```
+The initial part remains totally similar to passing by register
+
+```ASM
+                STMFD   sp!, {r0-r3}
+                BL      shiftFunc
+```
+- This part is more important, let's take a closer look:
+- - `STMFD sp!, {r0-r3}`
+- - Initial stack:
+- - | Address (hex) | Registers        | Stack Pointer   |
+| ------------- | ------------     | --------- |
+| `0x40000100`  |      --          | <--- sp   |
+- - STORE MULTIPLE FULL DESCENDING, with post indexing of your sp for r0 to r3
+- - What we are doing here is pushing r0 to r3 into the stack but also updating the sp location with the "!" symbol:
+- - | Address (hex) | Registers        | Stack Pointer   |
+| ------------- | ------------     | --------- |
+| `0x40000100`  |      --          |           |
+| `0x400000FC`  |      r3          |           |
+| `0x400000F8`  |      r2          |           |
+| `0x400000F4`  |      r1          |           |
+| `0x400000F0`  |      r0          | <--- sp   |
+- As you can see, full descending means that whenever we want to push something in, sp will decrement first then it pushes shit in. Right now, our stack contains these registers which will be the parameters that will be used in the subroutine
+- Note that everything you push anything in stack, bigger register number stays top and smaller stays bottom
+
+```ASM
+shiftfunc
+                STMFD   sp!, {r4-r7, lr}
+                LDR     r4, [sp, #20]
+                LDR     r5, [sp, #24]
+                LDR     r6, [sp, #28]
+                MOV     r7, #0
+                CMP     r4, r7
+
+                MOVEQ   r7, r5, LSL r6
+                MOVNE   r7, r5, LSR r6
+
+                STR     r7, [sp, #32]
+                LDMFD   sp!, {r4-r7, pc}
+
+
+                END
+```
+- Now that we are in the subroutine, it's healthy practice to perserve registers that we will be using inside the subroutine:
+- - `STMFD sp!, {r4-r7, lr}`
+- - We push r4 to r7 into the stack for preserving, but lr is pushed also because it is the return address, thats why it has to be reserved
+- - Current stack:
+- - | Address (hex) | Registers        | Stack Pointer   |
+| ------------- | ------------     | --------- |
+| `0x40000100`  |      --          |           |
+| `0x400000FC`  |      r3          |           |
+| `0x400000F8`  |      r2          |           |
+| `0x400000F4`  |      r1          |           |
+| `0x400000F0`  |      r0          |           |
+| `0x400000EC`  |      lr          |           |
+| `0x400000E8`  |      r7          |           |
+| `0x400000E4`  |      r6          |           |
+| `0x400000E0`  |      r5          |           |
+| `0x400000DC`  |      r4          | <--- sp   |
+- Same convention, lr is bigger so it goes in first and so on and so forth
+- - So back to the parameters thing, what does that mean actually? 
+- - `LDR r4, [sp, #20]`
+- - `LDR r5, [sp, #24]`
+- - `LDR r6, [sp, #28]`
+- - As we learnt from LDR with preindexing offset, we add the #number to the sp and load it into register
+- - First case: since sp is at `0x400000DC`, we add 20 bytes, which becomes, `0x400000F0` which houses r0. Thus, we load r0 value into r4.
+- - Second case, same thing, `0x400000DC`, add 24 bytes -> `0x400000F4` which houses r1, load it into r5
+- - Third case, add 28 bytes, `0x400000F8` which houses r2, load it into r6
+- So essentially, we are "using" r0, r1 and r2 as parameters, just that we copy their values into r4, r5 and r6
+- And that's it. After this is just your normal operations
+- Then before we go back to main routine:
+- - `STR r7, [sp, #32]`
+- - add 32 bytes -> `0x400000FC` which houses r3, store the output r7 into r3 
+- - `LDMFD sp!, {r4-r7, pc}`
+- - Finally, when subroutine is done, pop up all preserved registers:
+- - Current Stack:
+- - | Address (hex) | Registers        | Stack Pointer   |
+| ------------- | ------------     | --------- |
+| `0x40000100`  |      --          |           |
+| `0x400000FC`  |      r3          |           |
+| `0x400000F8`  |      r2          |           |
+| `0x400000F4`  |      r1          |           |
+| `0x400000F0`  |      r0          | <--- sp   |
+- - Note that lr is pop into pc, because remember, lr has the returning addressing, and pc now knows where to return to, back to main
+
+```ASM
+                STMFD   sp!, {r0-r3}
+                BL      shiftFunc
+                LDMFD   sp!, {r0-r3}
+```
+- Finally, we reached `LDMFD sp!, {r0-r3}`
+- We pop out the registers that we initially pass as parameters through stack:
+- Current stack:
+- - | Address (hex) | Registers        | Stack Pointer   |
+| ------------- | ------------     | --------- |
+| `0x40000100`  |      --          |           |
+- - Note that r0, r1 and r2 still has the same value as before. but r3 now has the final output we did inside the subroutine
