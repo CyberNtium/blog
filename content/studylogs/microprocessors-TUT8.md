@@ -95,6 +95,8 @@ ramBase EQU 0x40000000
 
         BL      factSub
 
+        LDMFD   sp!, {r0, r1}
+
 stop    B       stop
 
 
